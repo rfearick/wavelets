@@ -451,6 +451,7 @@ def plot_scale_spectrum(S, Peaks=None, plotci=False, normtovar=True, scaling="lo
     if S.scalepwr=='scale':
         selectedplot(S.xfft, S.pwrdata/S.xfft/vara+0.01,'g-')
     else:
+        #pass
         selectedplot(S.xfft, S.pwrdata/vara+0.01,'g-')
 
     if fitpeaks:
@@ -462,6 +463,10 @@ def plot_scale_spectrum(S, Peaks=None, plotci=False, normtovar=True, scaling="lo
         for p,pamp,ok in zip(Peaks.peaks, Peaks.peakamplitude,Peaks.peaksig):
             Pi=np.exp(-(S.y-p)**2/(p/k0)**2)*pamp/vara
             P0+=Pi
+    if plotci:
+        # plot confidence limits
+        selectedplot(S.y, S.cipn+0.001, 'm-',lw=1.0)
+        selectedplot(S.y, S.Pkpn+0.001, 'r-',lw=1.0)
     plt.tight_layout()
     if outfilename: plt.savefig(outfilename)
 
@@ -482,8 +487,10 @@ def set_plot_text_method(useLatex):
 if  __name__=="__main__":
     print("Version of 26/6/2017")
 
-    from SpectrumAnalyser8 import Spectrum, PeakFinder
+    from SpectrumAnalyser import Spectrum, PeakFinder
     import pylab as plt
+    import matplotlib as mpl
+    mpl.style.use('classic')
 ##    import os
 ##    import sys
 
@@ -494,14 +501,14 @@ if  __name__=="__main__":
     plotentropy=0     # plot entropy index or scale spectrum
     usesmooth=0       # use spectrum-smoothed
     plotspectrum=1    # plot spectrum or autocorrelation
-    normtovar=1       # normalize power spectrum to variance
+    normtovar=True       # normalize power spectrum to variance
     usederiv=0
     waveletclass=Morlet
     order=2
-    fitpeaks=True
-    plotci=False
+    fitpeaks=False
+    plotci=True
     outputscalespectrum=True
-    usewaveletscale=False
+    usewaveletscale=True
     useLatex=True
     doshoulders=False
 
@@ -509,17 +516,19 @@ if  __name__=="__main__":
 
     datafile="../../uct2013c/pb208/pb208gdr.dat"
     datafile="TEST2"
+    datafile="../../uct2011b/data/5keV/2800.dat"
     sig=0.03/2.35 # 50 keV
+    sig=0.05/2.35 # A=28, fwhm= 15 or 65?
     sigsm=0.0   # width of smoothing gaussian (MeV)
     Nf=512            # channels in FFT for power spectrum
     maxscale=4        # maximum scale is Ns/maxscale
     notes=16          # notes per octave. 0 gives linear scale
 
     # region of interest is gdr
-    Nlo=1000
-    Nhi=2000
-    scaling='linear'
-    #scaling='log'
+    Nlo=1600
+    Nhi=2400
+    #scaling='linear'
+    scaling='log'
 
     set_plot_text_method(useLatex)
 
@@ -533,12 +542,12 @@ if  __name__=="__main__":
     #Nhi=1500
     #Mlo=800
     #Mhi=1900
-    ROIlo=900
-    ROIhi=1500
-    plotlo=800
-    plothi=1900
+    ROIlo=1600
+    ROIhi=2400
+    plotlo=1500
+    plothi=2500
     #datafile="TEST1"
-    S=Spectrum(waveletclass, datafile, Nlo, Nhi, sig, 0, sigsm,order=order,scaling=scaling,scaletype=scaletype)  # 28/11/2013 hack
+    S=Spectrum(waveletclass, datafile, Nlo, Nhi, sig, 2, sigsm,order=order,scaling=scaling,scaletype=scaletype)  # 28/11/2013 hack
     print("data",S.a[698:702])
     print(S.scales[0:5])
     # extract data
@@ -550,6 +559,9 @@ if  __name__=="__main__":
     siglimit=sig*2.35*2  # lowest energy for worthwhile peaks
     if fitpeaks:
         Peaks=PeakFinder(S.scalespec, S.y, siglimit, S.vara, S.cipn, doshoulders)
+    else:
+        Peaks=None
+        
     ##     Peaks.peaks.append(0.598)
     ##     Peaks.peakamplitude.append(2305.)
     ##     Peaks.peaksig.append(True)
